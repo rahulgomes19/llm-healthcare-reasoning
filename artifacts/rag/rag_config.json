@@ -1,0 +1,5 @@
+{
+  "chunk_size": 500,
+  "k": 5,
+  "prompt_template": "default"
+}

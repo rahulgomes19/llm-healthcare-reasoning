@@ -1,0 +1,8 @@
+exemplars:
+  path: artifacts/icl/exemplar_set.json
+  num_shots: 3
+  pool_size_per_class: 25
+train_context:
+  path: artifacts/icl/train_context.json
+llm:
+  model: deepseek-r1:8b

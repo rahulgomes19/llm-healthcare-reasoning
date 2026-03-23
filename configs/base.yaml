@@ -1,0 +1,14 @@
+project:
+  name: diabetes_coach_v3
+paths:
+  raw_data: data/raw/diabetes_prediction_dataset.csv
+  processed_dir: data/processed
+  docs_dir: data/docs/mayo_guidelines
+  ml_artifacts_dir: artifacts/ml
+  rag_artifacts_dir: artifacts/rag
+  icl_artifacts_dir: artifacts/icl
+llm:
+  model: deepseek-r1:8b
+  embedding_model: nomic-embed-text
+  ollama_host: localhost:11434
+seed: 42

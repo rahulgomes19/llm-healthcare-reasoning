@@ -1,0 +1,14 @@
+model:
+  type: numpy_nn
+  hidden1: 64
+  hidden2: 32
+  learning_rate: 0.001
+train:
+  test_size: 0.30
+  epochs: 200
+  batch_size: 256
+  patience: 20
+artifacts:
+  model_path: artifacts/ml/model.pkl
+  scaler_path: artifacts/ml/scaler.pkl
+  metrics_path: artifacts/ml/metrics.json

@@ -1,0 +1,652 @@
+[
+  {
+    "case": {
+      "age": 42.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 49.2,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 71.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 64.8,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 280.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 60.0,
+      "gender": "Female",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 43.53,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 66.0,
+      "gender": "Male",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "former",
+      "bmi": 42.95,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 60.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "current",
+      "bmi": 40.18,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 33.0,
+      "gender": "Male",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "current",
+      "bmi": 38.58,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 45.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "current",
+      "bmi": 38.33,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 38.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 37.49,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 60.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "current",
+      "bmi": 37.46,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 61.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 37.3,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 45.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 37.25,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 80.0,
+      "gender": "Female",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 35.98,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 39.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "former",
+      "bmi": 35.5,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 43.0,
+      "gender": "Male",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "former",
+      "bmi": 35.39,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 80.0,
+      "gender": "Female",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 34.38,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 80.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 34.0,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 48.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 53.97,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 280.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 36.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 33.19,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 61.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "not current",
+      "bmi": 32.23,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 80.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "former",
+      "bmi": 32.05,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 79.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 32.04,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 71.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "former",
+      "bmi": 29.05,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 71.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "current",
+      "bmi": 28.12,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 55.0,
+      "gender": "Female",
+      "hypertension": 1,
+      "heart_disease": 0,
+      "smoking_history": "ever",
+      "bmi": 48.0,
+      "HbA1c_level": 9.0,
+      "blood_glucose_level": 280.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 40.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "not current",
+      "bmi": 47.65,
+      "HbA1c_level": 8.8,
+      "blood_glucose_level": 300.0
+    },
+    "label": "YES"
+  },
+  {
+    "case": {
+      "age": 5.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 12.46,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 7.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 13.92,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 11.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 14.19,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 4.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 14.4,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 5.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.0,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 0.32,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.42,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 2.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.52,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 1.88,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.56,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 4.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.6,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 6.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.61,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 4.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 15.72,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 8.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.73,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 15.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 15.95,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 13.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 15.99,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 11.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 16.0,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 0.24,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 11.24,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 85.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 4.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 16.24,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 4.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 16.37,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 14.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 16.55,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 9.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 16.75,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 8.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 16.82,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 20.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 16.83,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 25.0,
+      "gender": "Female",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "never",
+      "bmi": 16.96,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 7.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "No Info",
+      "bmi": 17.5,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  },
+  {
+    "case": {
+      "age": 14.0,
+      "gender": "Male",
+      "hypertension": 0,
+      "heart_disease": 0,
+      "smoking_history": "current",
+      "bmi": 17.71,
+      "HbA1c_level": 3.5,
+      "blood_glucose_level": 80.0
+    },
+    "label": "NO"
+  }
+]
