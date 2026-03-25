@@ -19,6 +19,7 @@ class ICLModel:
     def __init__(
         self,
         mode: str = "few_shot",
+        batch_mode: str | None = None,
         exemplar_path: str | None = None,
         train_context_path: str | None = None,
         model_name: str | None = None,
@@ -27,9 +28,11 @@ class ICLModel:
         config = self._load_config()
         exemplar_config = config.get("exemplars", {})
         context_config = config.get("train_context", {})
+        batch_config = config.get("batch", {})
         llm_config = config.get("llm", {})
 
         self.mode = mode
+        self.batch_mode = batch_mode or batch_config.get("mode", "heuristic")
         self.num_shots = num_shots or int(exemplar_config.get("num_shots", 3))
         self.exemplar_path = Path(
             exemplar_path or exemplar_config.get("path", "artifacts/icl/exemplar_set.json")
@@ -76,42 +79,84 @@ class ICLModel:
         prediction = "YES" if probability >= 0.5 else "NO"
         return prediction, float(probability)
 
-    def predict_one(self, case: Dict[str, Any]) -> Dict[str, Any]:
+    def _heuristic_decide(self, case: Dict[str, Any]) -> tuple[str, float]:
+        hba1c = float(case.get("HbA1c_level", 0))
+        glucose = float(case.get("blood_glucose_level", 0))
+        bmi = float(case.get("bmi", 0))
+        if hba1c >= 6.5 or glucose >= 126:
+            return "YES", 0.80
+        if hba1c < 5.7 and glucose < 100 and bmi < 25:
+            return "NO", 0.75
+        return "NO", 0.55
+
+    def _build_prompt_and_fallback(self, case: Dict[str, Any]) -> tuple[str, str, float]:
         if self.mode == "zero_shot":
             prompt = build_icl_zero_shot_prompt(case)
-            fallback_prediction, fallback_probability = "NO", 0.5
+            fallback_prediction, fallback_probability = self._heuristic_decide(case)
         elif self.mode == "train_context":
             prompt = build_icl_train_context_prompt(case, self.train_context)
-            hba1c = float(case.get("HbA1c_level", 0))
-            glucose = float(case.get("blood_glucose_level", 0))
-            fallback_prediction = "YES" if hba1c >= 6.5 or glucose >= 126 else "NO"
-            fallback_probability = 0.75 if fallback_prediction == "YES" else 0.55
+            fallback_prediction, fallback_probability = self._heuristic_decide(case)
         else:
             nearest = self._select_exemplars(case)
             if not nearest:
-                return {
-                    "prediction": "NO",
-                    "probability": 0.5,
-                    "raw_output": "No exemplars available.",
-                }
+                return "", "NO", 0.5
             prompt = build_icl_prompt(case, nearest)
             fallback_prediction, fallback_probability = self._vote_fallback(nearest)
+        return prompt, fallback_prediction, fallback_probability
+
+    def predict_one_llm(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        prompt, fallback_prediction, fallback_probability = self._build_prompt_and_fallback(case)
+        if not prompt:
+            return {
+                "prediction": fallback_prediction,
+                "probability": fallback_probability,
+                "raw_output": "WARNING: ICL exemplar prompt could not be built because no exemplars were available.",
+                "fallback_used": True,
+            }
 
         try:
             raw_output = self.client.generate(prompt)
             prediction, probability = parse_yes_no(raw_output)
+            return {
+                "prediction": prediction,
+                "probability": float(probability),
+                "raw_output": raw_output,
+                "fallback_used": False,
+            }
         except Exception as exc:
-            prediction, probability = fallback_prediction, fallback_probability
-            raw_output = (
-                f"LLM unavailable, used fallback ICL mode '{self.mode}': {exc}\n\n"
-                f"{prompt}"
-            )
+            return {
+                "prediction": fallback_prediction,
+                "probability": float(fallback_probability),
+                "raw_output": (
+                    f"WARNING: ICL LLM mode failed and fallback was used. "
+                    f"Mode='{self.mode}'. Reason: {exc}"
+                ),
+                "fallback_used": True,
+            }
+
+    def predict_one_heuristic(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        prompt, fallback_prediction, fallback_probability = self._build_prompt_and_fallback(case)
+        if not prompt and self.mode == "few_shot":
+            return {
+                "prediction": fallback_prediction,
+                "probability": fallback_probability,
+                "raw_output": "WARNING: ICL heuristic mode used direct fallback because no exemplars were available.",
+                "fallback_used": True,
+            }
 
         return {
-            "prediction": prediction,
-            "probability": float(probability),
-            "raw_output": raw_output,
+            "prediction": fallback_prediction,
+            "probability": float(fallback_probability),
+            "raw_output": (
+                f"ICL heuristic batch mode used fallback logic for mode '{self.mode}' without calling the LLM."
+            ),
+            "fallback_used": False,
         }
+
+    def predict_one(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        if self.batch_mode == "heuristic":
+            return self.predict_one_heuristic(case)
+        return self.predict_one_llm(case)
 
     def predict_batch(self, cases: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         return [self.predict_one(case) for case in cases]

@@ -12,3 +12,8 @@ def load_raw_data(path: str = 'data/raw/diabetes_prediction_dataset.csv') -> pd.
 
 def load_feature_columns(path: str = 'data/processed/feature_columns.json') -> list[str]:
     return json.loads(Path(path).read_text())
+
+
+def load_processed_split(split: str = 'test') -> pd.DataFrame:
+    path = Path('data/processed') / f'{split}.csv'
+    return pd.read_csv(path)

@@ -1,9 +1,10 @@
 retrieval:
   top_k: 3
-  chunk_size: 800
-  chunk_overlap: 100
+  chunk_size: 220
+  chunk_overlap: 40
 artifacts:
   config_path: artifacts/rag/rag_config.json
   index_dir: artifacts/rag/index
 llm:
   model: deepseek-r1:8b
+  embedding_model: nomic-embed-text

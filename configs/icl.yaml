@@ -4,5 +4,7 @@ exemplars:
   pool_size_per_class: 25
 train_context:
   path: artifacts/icl/train_context.json
+batch:
+  mode: heuristic
 llm:
   model: deepseek-r1:8b

@@ -37,8 +37,13 @@ def build_model(name: str):
     if name == 'rag':
         return RAGModel()
     if name == 'icl':
-        return ICLModel()
+        return ICLModel(batch_mode='llm')
     raise ValueError(f'Unknown model: {name}')
+
+
+def display_result(result: dict) -> dict:
+    hidden_keys = {'retrieved_context', 'retrieved_sources'}
+    return {key: value for key, value in result.items() if key not in hidden_keys}
 
 
 def main() -> None:
@@ -60,11 +65,15 @@ def main() -> None:
         results = {}
         total_runtime = 0.0
         for model_name in ['ml', 'rag', 'icl']:
-            model = ICLModel(mode=args.icl_mode) if model_name == 'icl' else build_model(model_name)
+            model = (
+                ICLModel(mode=args.icl_mode, batch_mode='llm')
+                if model_name == 'icl'
+                else build_model(model_name)
+            )
             result, elapsed = timed_call(model.predict_one, case)
             result['runtime_seconds'] = elapsed
             total_runtime += elapsed
-            results[model_name] = result
+            results[model_name] = display_result(result)
 
         print(json.dumps({
             'case': case,
@@ -73,10 +82,14 @@ def main() -> None:
         }, indent=2))
         return
 
-    model = ICLModel(mode=args.icl_mode) if args.model == 'icl' else build_model(args.model)
+    model = (
+        ICLModel(mode=args.icl_mode, batch_mode='llm')
+        if args.model == 'icl'
+        else build_model(args.model)
+    )
     result, elapsed = timed_call(model.predict_one, case)
     result['runtime_seconds'] = elapsed
-    print(json.dumps(result, indent=2))
+    print(json.dumps(display_result(result), indent=2))
 
 
 if __name__ == '__main__':
