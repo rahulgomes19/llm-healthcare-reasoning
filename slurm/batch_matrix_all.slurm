@@ -11,6 +11,9 @@ set -euo pipefail
 PROJECT_DIR="${SLURM_SUBMIT_DIR}"
 cd "${PROJECT_DIR}"
 mkdir -p slurm_logs
+mkdir -p artifacts/eval/logs
+
+OUTPUT_DIR="artifacts/eval/matrix_${SLURM_JOB_ID}"
 
 LIMIT_ARG=()
 if [[ -n "${LIMIT:-}" ]]; then
@@ -23,7 +26,7 @@ if [[ -n "${LIMIT:-}" ]]; then
 fi
 date
 
-python3 scripts/run_experiment_matrix.py --split test "${LIMIT_ARG[@]}"
+python3 scripts/run_experiment_matrix.py --split test --output-dir "${OUTPUT_DIR}" --log-dir "artifacts/eval/logs/matrix_${SLURM_JOB_ID}" "${LIMIT_ARG[@]}"
 
 date
 echo "Experiment matrix run completed"
