@@ -17,6 +17,8 @@ date
 
 python3 scripts/run_experiment.py --model ml
 python3 scripts/run_experiment.py --model rag
+python3 scripts/run_experiment.py --model rag --rag-mode stubbed_chunk_llm
+python3 scripts/run_experiment.py --model rag --rag-mode stubbed_full_doc_llm
 python3 scripts/run_experiment.py --model icl --icl-mode few_shot
 
 date

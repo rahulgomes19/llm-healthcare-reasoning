@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 
 from src.llm.client import OllamaClient
-from src.llm.parser import parse_yes_no
+from src.llm.parser import parse_prediction_response
 from src.llm.prompts import build_rag_prompt
 
 
@@ -37,6 +37,8 @@ class RAGModel:
 
         self.meta_path = self.index_dir / 'rag_index_meta.pkl'
         self.embedding_path = self.index_dir / 'rag_index_embeddings.npy'
+        self.stubbed_chunk_path = self.index_dir.parent / 'stubbed_chunk.md'
+        self.stubbed_full_doc_path = self.index_dir.parent / 'stubbed_full_doc.md'
 
         self.chunks: List[str] = []
         self.metadata: List[dict] = []
@@ -108,26 +110,89 @@ class RAGModel:
     def _decide(self, case: Dict[str, Any]) -> tuple[str, float]:
         hba1c = float(case.get('HbA1c_level', 0))
         glucose = float(case.get('blood_glucose_level', 0))
-        if hba1c >= 6.5 or glucose >= 126:
+        if hba1c >= 6.5 or glucose >= 200:
             return 'YES', 0.80
         if hba1c < 5.7 and glucose < 100:
             return 'NO', 0.80
         return 'NO', 0.55
 
-    def predict_one_llm(self, case: Dict[str, Any]) -> Dict[str, Any]:
+    def _load_stubbed_context(self, path: Path, label: str) -> tuple[str, List[dict]]:
+        if not path.exists():
+            raise RuntimeError(
+                f"Stubbed RAG context file is missing for {label}: {path}"
+            )
+        context = path.read_text(encoding='utf-8').strip()
+        if not context:
+            raise RuntimeError(
+                f"Stubbed RAG context file is empty for {label}: {path}"
+            )
+        return context, [{
+            'text': context[:500],
+            'source': path.name,
+            'chunk_id': 0,
+            'score': 1.0,
+        }]
+
+    def _predict_with_context(
+        self,
+        case: Dict[str, Any],
+        context: str,
+        retrieved: List[dict],
+        source_label: str,
+    ) -> Dict[str, Any]:
         try:
-            context, retrieved = self._retrieve(case)
             prompt = build_rag_prompt(case, context)
             raw_output = self.client.generate(prompt)
-            prediction, probability = parse_yes_no(raw_output)
+            parsed = parse_prediction_response(raw_output)
+            if not parsed["parsed_ok"]:
+                prediction, probability = self._decide(case)
+                return {
+                    'prediction': prediction,
+                    'probability': probability,
+                    'raw_output': raw_output,
+                    'retrieved_context': context,
+                    'retrieved_sources': retrieved,
+                    'fallback_used': True,
+                    'parsed_ok': False,
+                    'parse_error': parsed["parse_error"],
+                    'rationale': '',
+                    'evidence': '',
+                }
             return {
-                'prediction': prediction,
-                'probability': probability,
+                'prediction': parsed["prediction"],
+                'probability': parsed["probability"],
                 'raw_output': raw_output,
                 'retrieved_context': context,
                 'retrieved_sources': retrieved,
                 'fallback_used': False,
+                'parsed_ok': True,
+                'parse_error': None,
+                'rationale': parsed["rationale"],
+                'evidence': parsed["evidence"],
             }
+        except Exception as exc:
+            prediction, probability = self._decide(case)
+            fallback_message = (
+                f"WARNING: {source_label} failed and heuristic fallback was used. "
+                f"Reason: {exc}"
+            )
+            return {
+                'prediction': prediction,
+                'probability': probability,
+                'raw_output': fallback_message,
+                'retrieved_context': context,
+                'retrieved_sources': retrieved,
+                'fallback_used': True,
+                'parsed_ok': False,
+                'parse_error': str(exc),
+                'rationale': '',
+                'evidence': '',
+            }
+
+    def predict_one_llm(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            context, retrieved = self._retrieve(case)
+            return self._predict_with_context(case, context, retrieved, "True RAG")
         except Exception as exc:
             prediction, probability = self._decide(case)
             fallback_message = (
@@ -138,6 +203,52 @@ class RAGModel:
                 'prediction': prediction,
                 'probability': probability,
                 'raw_output': fallback_message,
+                'retrieved_context': '',
+                'retrieved_sources': [],
+                'fallback_used': True,
+                'parsed_ok': False,
+                'parse_error': str(exc),
+                'rationale': '',
+                'evidence': '',
+            }
+
+    def predict_one_stubbed_chunk_llm(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            context, retrieved = self._load_stubbed_context(
+                self.stubbed_chunk_path,
+                'stubbed chunk',
+            )
+            return self._predict_with_context(case, context, retrieved, "Stubbed chunk RAG")
+        except Exception as exc:
+            prediction, probability = self._decide(case)
+            return {
+                'prediction': prediction,
+                'probability': probability,
+                'raw_output': (
+                    "WARNING: Stubbed chunk RAG failed and heuristic fallback was used. "
+                    f"Reason: {exc}"
+                ),
+                'retrieved_context': '',
+                'retrieved_sources': [],
+                'fallback_used': True,
+            }
+
+    def predict_one_stubbed_full_doc_llm(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            context, retrieved = self._load_stubbed_context(
+                self.stubbed_full_doc_path,
+                'stubbed full document',
+            )
+            return self._predict_with_context(case, context, retrieved, "Stubbed full-document RAG")
+        except Exception as exc:
+            prediction, probability = self._decide(case)
+            return {
+                'prediction': prediction,
+                'probability': probability,
+                'raw_output': (
+                    "WARNING: Stubbed full-document RAG failed and heuristic fallback was used. "
+                    f"Reason: {exc}"
+                ),
                 'retrieved_context': '',
                 'retrieved_sources': [],
                 'fallback_used': True,
@@ -156,6 +267,10 @@ class RAGModel:
                 'retrieved_context': context,
                 'retrieved_sources': retrieved,
                 'fallback_used': False,
+                'parsed_ok': True,
+                'parse_error': None,
+                'rationale': 'Deterministic threshold logic was applied after retrieval.',
+                'evidence': 'HbA1c and current/random glucose thresholds were used.',
             }
         except Exception as exc:
             prediction, probability = self._decide(case)
@@ -170,6 +285,10 @@ class RAGModel:
                 'retrieved_context': '',
                 'retrieved_sources': [],
                 'fallback_used': True,
+                'parsed_ok': False,
+                'parse_error': str(exc),
+                'rationale': '',
+                'evidence': '',
             }
 
     def predict_one(self, case: Dict[str, Any]) -> Dict[str, Any]:

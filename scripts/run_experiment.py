@@ -50,6 +50,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['ml', 'rag', 'icl', 'all'], required=True)
     parser.add_argument(
+        '--rag-mode',
+        choices=['llm', 'heuristic', 'stubbed_chunk_llm', 'stubbed_full_doc_llm'],
+        default='llm',
+        help='RAG sub-mode to run when --model rag or --model all is used.',
+    )
+    parser.add_argument(
         '--icl-mode',
         choices=['zero_shot', 'few_shot', 'train_context'],
         default='few_shot',
@@ -70,7 +76,16 @@ def main() -> None:
                 if model_name == 'icl'
                 else build_model(model_name)
             )
-            result, elapsed = timed_call(model.predict_one, case)
+            if model_name == 'rag':
+                rag_fn = {
+                    'llm': model.predict_one,
+                    'heuristic': model.predict_one_heuristic,
+                    'stubbed_chunk_llm': model.predict_one_stubbed_chunk_llm,
+                    'stubbed_full_doc_llm': model.predict_one_stubbed_full_doc_llm,
+                }[args.rag_mode]
+                result, elapsed = timed_call(rag_fn, case)
+            else:
+                result, elapsed = timed_call(model.predict_one, case)
             result['runtime_seconds'] = elapsed
             total_runtime += elapsed
             results[model_name] = display_result(result)
@@ -87,7 +102,16 @@ def main() -> None:
         if args.model == 'icl'
         else build_model(args.model)
     )
-    result, elapsed = timed_call(model.predict_one, case)
+    if args.model == 'rag':
+        rag_fn = {
+            'llm': model.predict_one,
+            'heuristic': model.predict_one_heuristic,
+            'stubbed_chunk_llm': model.predict_one_stubbed_chunk_llm,
+            'stubbed_full_doc_llm': model.predict_one_stubbed_full_doc_llm,
+        }[args.rag_mode]
+        result, elapsed = timed_call(rag_fn, case)
+    else:
+        result, elapsed = timed_call(model.predict_one, case)
     result['runtime_seconds'] = elapsed
     print(json.dumps(display_result(result), indent=2))
 

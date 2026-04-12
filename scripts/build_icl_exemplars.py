@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -31,22 +32,128 @@ def row_to_case(row: pd.Series) -> dict:
     }
 
 
+def _boundary_score(df: pd.DataFrame) -> pd.Series:
+    hba1c_gap = (df["HbA1c_level"].astype(float) - 6.5).abs()
+    glucose_gap = (df["blood_glucose_level"].astype(float) - 200.0).abs() / 25.0
+    return np.minimum(hba1c_gap.to_numpy(), glucose_gap.to_numpy())
+
+
+def _severity_score(df: pd.DataFrame) -> pd.Series:
+    return (
+        df["HbA1c_level"].astype(float) * 10.0
+        + df["blood_glucose_level"].astype(float) / 10.0
+        + df["bmi"].astype(float) / 10.0
+    )
+
+
+def _typical_distance(df: pd.DataFrame) -> pd.Series:
+    cols = ["age", "bmi", "HbA1c_level", "blood_glucose_level"]
+    medians = df[cols].astype(float).median()
+    distances = []
+    for col in cols:
+        scale = float(df[col].astype(float).std())
+        if scale == 0 or np.isnan(scale):
+            scale = 1.0
+        distances.append((df[col].astype(float) - medians[col]).abs() / scale)
+    return sum(distances)
+
+
+def _allocate_bucket_counts(pool_size_per_class: int) -> dict[str, int]:
+    base = {
+        "boundary": int(round(pool_size_per_class * 0.4)),
+        "typical": int(round(pool_size_per_class * 0.4)),
+        "extreme": 0,
+    }
+    base["extreme"] = pool_size_per_class - base["boundary"] - base["typical"]
+    return base
+
+
+def _select_bucket(
+    class_df: pd.DataFrame,
+    already_selected: set[int],
+    sort_columns: list[str],
+    ascending: list[bool],
+    count: int,
+    bucket_name: str,
+    label_name: str,
+) -> list[dict]:
+    if count <= 0:
+        return []
+
+    available = class_df.loc[~class_df.index.isin(already_selected)].copy()
+    if available.empty:
+        return []
+
+    selected = available.sort_values(sort_columns, ascending=ascending).head(count)
+    output = []
+    for idx, row in selected.iterrows():
+        already_selected.add(int(idx))
+        output.append({
+            "case": row_to_case(row),
+            "label": label_name,
+            "selection_bucket": bucket_name,
+        })
+    return output
+
+
 def build_exemplar_pool(train_df: pd.DataFrame, pool_size_per_class: int) -> list[dict]:
     exemplars = []
     for label_value, label_name in [(1, "YES"), (0, "NO")]:
         class_df = train_df[train_df["diabetes"].astype(int) == label_value].copy()
-        class_df["risk_score"] = (
-            class_df["HbA1c_level"].astype(float) * 10.0
-            + class_df["blood_glucose_level"].astype(float) / 10.0
-            + class_df["bmi"].astype(float) / 10.0
+        class_df["boundary_score"] = _boundary_score(class_df)
+        class_df["severity_score"] = _severity_score(class_df)
+        class_df["typical_distance"] = _typical_distance(class_df)
+
+        bucket_counts = _allocate_bucket_counts(pool_size_per_class)
+        selected_indices: set[int] = set()
+
+        exemplars.extend(
+            _select_bucket(
+                class_df,
+                selected_indices,
+                ["boundary_score", "typical_distance"],
+                [True, True],
+                bucket_counts["boundary"],
+                "boundary",
+                label_name,
+            )
         )
-        class_df = class_df.sort_values("risk_score", ascending=(label_value == 0))
-        selected = class_df.head(pool_size_per_class)
-        for _, row in selected.iterrows():
-            exemplars.append({
-                "case": row_to_case(row),
-                "label": label_name,
-            })
+        exemplars.extend(
+            _select_bucket(
+                class_df,
+                selected_indices,
+                ["typical_distance", "boundary_score"],
+                [True, True],
+                bucket_counts["typical"],
+                "typical",
+                label_name,
+            )
+        )
+        exemplars.extend(
+            _select_bucket(
+                class_df,
+                selected_indices,
+                ["severity_score", "boundary_score"],
+                [label_value == 0, False],
+                bucket_counts["extreme"],
+                "extreme",
+                label_name,
+            )
+        )
+
+        remaining = pool_size_per_class - sum(1 for ex in exemplars if ex["label"] == label_name)
+        if remaining > 0:
+            exemplars.extend(
+                _select_bucket(
+                    class_df,
+                    selected_indices,
+                    ["typical_distance", "boundary_score"],
+                    [True, True],
+                    remaining,
+                    "fill",
+                    label_name,
+                )
+            )
     return exemplars
 
 
@@ -68,8 +175,54 @@ def build_train_context(train_df: pd.DataFrame) -> dict:
     negative_df = train_df[train_df["diabetes"].astype(int) == 0]
 
     def representative_cases(df: pd.DataFrame, n: int) -> list[dict]:
-        selected = df.head(n)
-        return [row_to_case(row) for _, row in selected.iterrows()]
+        if df.empty or n <= 0:
+            return []
+
+        scored = df.copy()
+        scored["boundary_score"] = _boundary_score(scored)
+        scored["severity_score"] = _severity_score(scored)
+        scored["typical_distance"] = _typical_distance(scored)
+        label_value = int(scored["diabetes"].astype(int).iloc[0])
+
+        selected_indices: set[int] = set()
+        selected_cases: list[dict] = []
+
+        bucket_plan = []
+        if n >= 1:
+            bucket_plan.append(("boundary", ["boundary_score", "typical_distance"], [True, True], 1))
+        if n >= 2:
+            bucket_plan.append(("typical", ["typical_distance", "boundary_score"], [True, True], 1))
+        if n >= 3:
+            bucket_plan.append(
+                ("extreme", ["severity_score", "boundary_score"], [label_value == 0, False], 1)
+            )
+
+        for bucket_name, sort_columns, ascending, count in bucket_plan:
+            bucket_cases = _select_bucket(
+                scored,
+                selected_indices,
+                sort_columns,
+                ascending,
+                count,
+                bucket_name,
+                "YES" if label_value == 1 else "NO",
+            )
+            selected_cases.extend([case_entry["case"] for case_entry in bucket_cases])
+
+        remaining = n - len(selected_cases)
+        if remaining > 0:
+            fill_cases = _select_bucket(
+                scored,
+                selected_indices,
+                ["typical_distance", "boundary_score"],
+                [True, True],
+                remaining,
+                "fill",
+                "YES" if label_value == 1 else "NO",
+            )
+            selected_cases.extend([case_entry["case"] for case_entry in fill_cases])
+
+        return selected_cases[:n]
 
     return {
         "train_size": int(len(train_df)),
