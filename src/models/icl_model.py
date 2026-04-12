@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 import yaml
 
 from src.llm.client import OllamaClient
-from src.llm.parser import parse_yes_no
+from src.llm.parser import parse_prediction_response
 from src.llm.prompts import (
     build_icl_prompt,
     build_icl_train_context_prompt,
@@ -83,7 +83,7 @@ class ICLModel:
         hba1c = float(case.get("HbA1c_level", 0))
         glucose = float(case.get("blood_glucose_level", 0))
         bmi = float(case.get("bmi", 0))
-        if hba1c >= 6.5 or glucose >= 126:
+        if hba1c >= 6.5 or glucose >= 200:
             return "YES", 0.80
         if hba1c < 5.7 and glucose < 100 and bmi < 25:
             return "NO", 0.75
@@ -112,16 +112,35 @@ class ICLModel:
                 "probability": fallback_probability,
                 "raw_output": "WARNING: ICL exemplar prompt could not be built because no exemplars were available.",
                 "fallback_used": True,
+                "parsed_ok": False,
+                "parse_error": "No exemplars were available to build the prompt.",
+                "rationale": "",
+                "evidence": "",
             }
 
         try:
             raw_output = self.client.generate(prompt)
-            prediction, probability = parse_yes_no(raw_output)
+            parsed = parse_prediction_response(raw_output)
+            if not parsed["parsed_ok"]:
+                return {
+                    "prediction": fallback_prediction,
+                    "probability": float(fallback_probability),
+                    "raw_output": raw_output,
+                    "fallback_used": True,
+                    "parsed_ok": False,
+                    "parse_error": parsed["parse_error"],
+                    "rationale": "",
+                    "evidence": "",
+                }
             return {
-                "prediction": prediction,
-                "probability": float(probability),
+                "prediction": parsed["prediction"],
+                "probability": float(parsed["probability"]),
                 "raw_output": raw_output,
                 "fallback_used": False,
+                "parsed_ok": True,
+                "parse_error": None,
+                "rationale": parsed["rationale"],
+                "evidence": parsed["evidence"],
             }
         except Exception as exc:
             return {
@@ -132,6 +151,10 @@ class ICLModel:
                     f"Mode='{self.mode}'. Reason: {exc}"
                 ),
                 "fallback_used": True,
+                "parsed_ok": False,
+                "parse_error": str(exc),
+                "rationale": "",
+                "evidence": "",
             }
 
     def predict_one_heuristic(self, case: Dict[str, Any]) -> Dict[str, Any]:
@@ -142,6 +165,10 @@ class ICLModel:
                 "probability": fallback_probability,
                 "raw_output": "WARNING: ICL heuristic mode used direct fallback because no exemplars were available.",
                 "fallback_used": True,
+                "parsed_ok": False,
+                "parse_error": "No exemplars were available for heuristic few-shot mode.",
+                "rationale": "",
+                "evidence": "",
             }
 
         return {
@@ -151,6 +178,10 @@ class ICLModel:
                 f"ICL heuristic batch mode used fallback logic for mode '{self.mode}' without calling the LLM."
             ),
             "fallback_used": False,
+            "parsed_ok": True,
+            "parse_error": None,
+            "rationale": "Heuristic fallback logic was applied instead of an LLM call.",
+            "evidence": "The decision was based on exemplar voting or deterministic thresholds.",
         }
 
     def predict_one(self, case: Dict[str, Any]) -> Dict[str, Any]:

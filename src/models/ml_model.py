@@ -58,7 +58,7 @@ class MLModel:
         score = 0.0
         if float(case.get('HbA1c_level', 0)) >= 6.5:
             score += 0.45
-        if float(case.get('blood_glucose_level', 0)) >= 126:
+        if float(case.get('blood_glucose_level', 0)) >= 200:
             score += 0.35
         if float(case.get('bmi', 0)) >= 30:
             score += 0.10

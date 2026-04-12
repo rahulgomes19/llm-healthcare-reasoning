@@ -21,14 +21,26 @@ def build_runs() -> list[dict]:
         {
             "name": "rag_heuristic",
             "model": "rag",
-            "rag_batch_mode": "heuristic",
-            "args": ["--model", "rag", "--rag-batch-mode", "heuristic"],
+            "rag_mode": "heuristic",
+            "args": ["--model", "rag", "--rag-mode", "heuristic"],
         },
         {
             "name": "rag_llm",
             "model": "rag",
-            "rag_batch_mode": "llm",
-            "args": ["--model", "rag", "--rag-batch-mode", "llm"],
+            "rag_mode": "llm",
+            "args": ["--model", "rag", "--rag-mode", "llm"],
+        },
+        {
+            "name": "rag_stubbed_chunk_llm",
+            "model": "rag",
+            "rag_mode": "stubbed_chunk_llm",
+            "args": ["--model", "rag", "--rag-mode", "stubbed_chunk_llm"],
+        },
+        {
+            "name": "rag_stubbed_full_doc_llm",
+            "model": "rag",
+            "rag_mode": "stubbed_full_doc_llm",
+            "args": ["--model", "rag", "--rag-mode", "stubbed_full_doc_llm"],
         },
     ]
 
@@ -64,7 +76,7 @@ def result_path_for_run(output_dir: Path, split: str, run: dict) -> Path:
     if run["model"] == "ml":
         return output_dir / f"ml_{split}_results.json"
     if run["model"] == "rag":
-        return output_dir / f"rag_{run['rag_batch_mode']}_{split}_results.json"
+        return output_dir / f"rag_{run['rag_mode']}_{split}_results.json"
 
     return output_dir / f"icl_{run['icl_mode']}_{run['icl_batch_mode']}_{split}_results.json"
 
@@ -95,6 +107,16 @@ def main() -> None:
         default="artifacts/eval/logs",
         help="Directory to store per-run log files.",
     )
+    parser.add_argument(
+        "--rag-llm-model",
+        default=None,
+        help="Optional override for the Ollama model used by RAG LLM mode.",
+    )
+    parser.add_argument(
+        "--icl-llm-model",
+        default=None,
+        help="Optional override for the Ollama model used by ICL LLM mode.",
+    )
     args = parser.parse_args()
 
     output_dir = PROJECT_ROOT / args.output_dir
@@ -119,6 +141,10 @@ def main() -> None:
             "--log-file",
             str(log_path.relative_to(PROJECT_ROOT)),
         ]
+        if args.rag_llm_model is not None:
+            cmd.extend(["--rag-llm-model", args.rag_llm_model])
+        if args.icl_llm_model is not None:
+            cmd.extend(["--icl-llm-model", args.icl_llm_model])
         if args.limit is not None:
             cmd.extend(["--limit", str(args.limit)])
 

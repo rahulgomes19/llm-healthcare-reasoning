@@ -49,21 +49,28 @@ def load_ml_config() -> dict:
         return yaml.safe_load(f)
 
 
-def load_split_data(test_size: float) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_split_data(val_size: float, test_size: float) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     train_path = PROJECT_ROOT / "data" / "processed" / "train.csv"
+    val_path = PROJECT_ROOT / "data" / "processed" / "val.csv"
     test_path = PROJECT_ROOT / "data" / "processed" / "test.csv"
 
-    if train_path.exists() and test_path.exists():
-        return pd.read_csv(train_path), pd.read_csv(test_path)
+    if train_path.exists() and val_path.exists() and test_path.exists():
+        return pd.read_csv(train_path), pd.read_csv(val_path), pd.read_csv(test_path)
 
     raw_path = PROJECT_ROOT / "data" / "raw" / "diabetes_prediction_dataset.csv"
     df = pd.read_csv(raw_path)
-    split = stratified_split_indices(df["diabetes"].values, test_size=test_size, random_state=42)
+    split = stratified_split_indices(
+        df["diabetes"].values,
+        val_size=val_size,
+        test_size=test_size,
+        random_state=42,
+    )
     save_split(split, str(PROJECT_ROOT / "data" / "processed" / "split_indices.json"))
-    train_df, test_df = apply_split(df, split)
+    train_df, val_df, test_df = apply_split(df, split)
     train_df.to_csv(train_path, index=False)
+    val_df.to_csv(val_path, index=False)
     test_df.to_csv(test_path, index=False)
-    return train_df, test_df
+    return train_df, val_df, test_df
 
 
 def prepare_features(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, list[str]]:
@@ -90,16 +97,22 @@ def main() -> None:
     train_config = config.get("train", {})
     artifact_config = config.get("artifacts", {})
 
-    train_df, test_df = load_split_data(test_size=float(train_config.get("test_size", 0.30)))
+    train_df, val_df, test_df = load_split_data(
+        val_size=float(train_config.get("val_size", 0.15)),
+        test_size=float(train_config.get("test_size", 0.15)),
+    )
 
     x_train, y_train, feature_columns = prepare_features(train_df)
+    x_val, y_val, _ = prepare_features(val_df)
     x_test, y_test, _ = prepare_features(test_df)
 
     scaler = ManualMinMaxScaler()
     x_train = scaler.fit_transform(x_train)
+    x_val = scaler.transform(x_val)
     x_test = scaler.transform(x_test)
 
     x_train = np.nan_to_num(x_train, nan=0.0, posinf=0.0, neginf=0.0)
+    x_val = np.nan_to_num(x_val, nan=0.0, posinf=0.0, neginf=0.0)
     x_test = np.nan_to_num(x_test, nan=0.0, posinf=0.0, neginf=0.0)
 
     model = NumpyNeuralNetwork(
@@ -113,8 +126,8 @@ def main() -> None:
     history = model.fit(
         x_train,
         y_train,
-        X_val=x_test,
-        y_val=y_test,
+        X_val=x_val,
+        y_val=y_val,
         epochs=int(train_config.get("epochs", 200)),
         batch_size=int(train_config.get("batch_size", 256)),
         patience=int(train_config.get("patience", 20)),
@@ -122,12 +135,15 @@ def main() -> None:
     )
 
     train_prob = model.predict(x_train).flatten()
+    val_prob = model.predict(x_val).flatten()
     test_prob = model.predict(x_test).flatten()
 
     metrics = {
         "train_size": int(len(train_df)),
+        "val_size": int(len(val_df)),
         "test_size": int(len(test_df)),
         "train_accuracy": accuracy_score(y_train, train_prob),
+        "val_accuracy": accuracy_score(y_val, val_prob),
         "test_accuracy": accuracy_score(y_test, test_prob),
         "feature_columns": feature_columns,
         "history": {
@@ -160,6 +176,7 @@ def main() -> None:
     print(f"  metrics: {metrics_path}")
     print(f"  feature columns: {feature_path}")
     print(f"Train accuracy: {metrics['train_accuracy']:.4f}")
+    print(f"Val accuracy:   {metrics['val_accuracy']:.4f}")
     print(f"Test accuracy:  {metrics['test_accuracy']:.4f}")
 
 
